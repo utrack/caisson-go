@@ -6,6 +6,7 @@ import (
 
 // Coder is a static struct which enriches passing errors with HTTP codes and user messages.
 type Coder interface {
+	WithType(typ string) Coder
 	WithMessage(userMessage string) Coder
 	WithMessagef(format string, args ...any) Coder
 	WithHTTPCode(httpCode int) Coder
@@ -16,6 +17,7 @@ type Coder interface {
 type Coded interface {
 	HTTPCode() int
 	Message() string
+	Type() string
 	Cause() error
 }
 
@@ -35,15 +37,26 @@ func Code(err error) Coded {
 
 type coder struct {
 	httpCode    int
+	typ         string
 	userMessage string
 	cause       error
 }
 
 var _ Coder = coder{}
 
+func (c coder) WithType(typ string) Coder {
+	return coder{
+		httpCode:    c.httpCode,
+		typ:         typ,
+		userMessage: c.userMessage,
+		cause:       c.cause,
+	}
+}
+
 func (c coder) WithMessage(userMessage string) Coder {
 	return coder{
 		httpCode:    c.httpCode,
+		typ:         c.typ,
 		userMessage: userMessage,
 		cause:       c.cause,
 	}
@@ -52,6 +65,7 @@ func (c coder) WithMessage(userMessage string) Coder {
 func (c coder) WithMessagef(format string, args ...any) Coder {
 	return coder{
 		httpCode:    c.httpCode,
+		typ:         c.typ,
 		userMessage: fmt.Sprintf(format, args...),
 		cause:       c.cause,
 	}
@@ -60,6 +74,7 @@ func (c coder) WithMessagef(format string, args ...any) Coder {
 func (c coder) WithHTTPCode(httpCode int) Coder {
 	return coder{
 		httpCode:    httpCode,
+		typ:         c.typ,
 		userMessage: c.userMessage,
 		cause:       c.cause,
 	}
@@ -68,6 +83,7 @@ func (c coder) WithHTTPCode(httpCode int) Coder {
 func (c coder) Wrap(cause error) error {
 	return coded{
 		httpCode:    c.httpCode,
+		typ:         c.typ,
 		userMessage: c.userMessage,
 		cause:       cause,
 	}
@@ -75,6 +91,7 @@ func (c coder) Wrap(cause error) error {
 
 type coded struct {
 	httpCode    int
+	typ         string
 	userMessage string
 	cause       error
 }
@@ -96,6 +113,10 @@ func (c coded) Message() string {
 	}
 
 	return c.userMessage
+}
+
+func (c coded) Type() string {
+	return c.typ
 }
 
 func (c coded) Cause() error {
