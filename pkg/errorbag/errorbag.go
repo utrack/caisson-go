@@ -41,17 +41,16 @@ func With[K comparable, T any](cause error, key K, value T) Bag[K, T] {
 // Get returns the value associated with the given key; recursing into the error chain to find it.
 //
 // It follows the errors.Unwrap() semantics; key-value pairs behind the errors.Join are unsupported.
-func Get[K comparable, T any](err error, key K) (*T, bool) {
+func Get[K comparable, T any](err error, key K) (T, bool) {
 	for err != nil {
 		if bag, ok := err.(Bag[K, T]); ok {
 			if bag.Key() == key {
-				ret := bag.Value()
-				return &ret, true
+				return bag.Value(), true
 			}
 		}
 		err = errors.Unwrap(err)
 	}
-	return nil, false
+	return *new(T), false
 }
 
 // GetAll returns all the values associated with the given key; recursing into the error chain to find them.
