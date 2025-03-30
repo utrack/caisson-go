@@ -21,16 +21,14 @@ type Coded interface {
 	Unwrap() error
 }
 
-type keyCoderType string
-
-const (
-	keyCoded keyCoderType = "errors.Coded"
-)
-
 func Code(err error) Coded {
-	c, ok := Data[keyCoderType, Coded](err, keyCoded)
+	if err == nil {
+		return nil
+	}
+	var ret Detailed[Coded]
+	ok := As(err, &ret)
 	if ok {
-		return c
+		return ret.Details()
 	}
 	return nil
 }
@@ -80,12 +78,12 @@ func (c coder) WithHTTPCode(httpCode int) Coder {
 }
 
 func (c coder) Wrap(cause error) error {
-	return coded{
+	return DetailWith[Coded](cause, coded{
 		httpCode:    c.httpCode,
 		typ:         c.typ,
 		userMessage: c.userMessage,
 		cause:       cause,
-	}
+	})
 }
 
 type coded struct {

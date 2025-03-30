@@ -17,6 +17,7 @@ import (
 type Bag[K comparable, T any] interface {
 	error
 	Key() K
+	Details() T
 	Value() T
 	Unwrap() error
 }
@@ -97,6 +98,10 @@ func (c container[K, T]) Error() string {
 
 func (c container[K, T]) Key() K {
 	return c.key
+}
+
+func (c container[K, T]) Details() T {
+	return c.value
 }
 
 func (c container[K, T]) Value() T {
