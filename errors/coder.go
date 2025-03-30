@@ -18,7 +18,7 @@ type Coded interface {
 	HTTPCode() int
 	Message() string
 	Type() string
-	Cause() error
+	Unwrap() error
 }
 
 type keyCoderType string
@@ -35,11 +35,14 @@ func Code(err error) Coded {
 	return nil
 }
 
+func NewCoder() Coder {
+	return coder{}
+}
+
 type coder struct {
 	httpCode    int
 	typ         string
 	userMessage string
-	cause       error
 }
 
 var _ Coder = coder{}
@@ -49,7 +52,6 @@ func (c coder) WithType(typ string) Coder {
 		httpCode:    c.httpCode,
 		typ:         typ,
 		userMessage: c.userMessage,
-		cause:       c.cause,
 	}
 }
 
@@ -58,7 +60,6 @@ func (c coder) WithMessage(userMessage string) Coder {
 		httpCode:    c.httpCode,
 		typ:         c.typ,
 		userMessage: userMessage,
-		cause:       c.cause,
 	}
 }
 
@@ -67,7 +68,6 @@ func (c coder) WithMessagef(format string, args ...any) Coder {
 		httpCode:    c.httpCode,
 		typ:         c.typ,
 		userMessage: fmt.Sprintf(format, args...),
-		cause:       c.cause,
 	}
 }
 
@@ -76,7 +76,6 @@ func (c coder) WithHTTPCode(httpCode int) Coder {
 		httpCode:    httpCode,
 		typ:         c.typ,
 		userMessage: c.userMessage,
-		cause:       c.cause,
 	}
 }
 
@@ -119,7 +118,7 @@ func (c coded) Type() string {
 	return c.typ
 }
 
-func (c coded) Cause() error {
+func (c coded) Unwrap() error {
 	return c.cause
 }
 
