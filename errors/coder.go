@@ -35,8 +35,8 @@ func Code(err error) Coded {
 	return nil
 }
 
-func NewCoder() Coder {
-	return coder{}
+func NewCoder(typ string) Coder {
+	return coder{typ: typ}
 }
 
 type coder struct {
