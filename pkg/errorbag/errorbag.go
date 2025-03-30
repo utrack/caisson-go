@@ -10,6 +10,7 @@ package errorbag
 
 import (
 	"errors"
+	"fmt"
 )
 
 // Bag is a key-value pair with an error
@@ -20,6 +21,12 @@ type Bag[K comparable, T any] interface {
 	Details() T
 	Value() T
 	Unwrap() error
+	bagAny
+}
+
+type bagAny interface {
+	keyAny() any
+	valueAny() any
 }
 
 // With creates a new bag with the given cause, key, and value.
@@ -74,11 +81,11 @@ func GetAll[K comparable, T any](err error, key K) ([]T, bool) {
 //
 // Listing the pairs is a potentially expensive operation, as it requires
 // traversing the entire error chain.
-func ListPairs(err error) []any {
-	ret := make([]any, 0, 3)
+func ListPairs(err error) map[string]any {
+	ret := make(map[string]any, 3)
 	for err != nil {
-		if bag, ok := err.(Bag[any, any]); ok {
-			ret = append(ret, bag.Key(), bag.Value())
+		if bag, ok := err.(bagAny); ok {
+			ret[fmt.Sprintf("%s", bag.keyAny())] = bag.valueAny()
 		}
 		err = errors.Unwrap(err)
 	}
@@ -110,4 +117,12 @@ func (c container[K, T]) Value() T {
 
 func (c container[K, T]) Unwrap() error {
 	return c.cause
+}
+
+func (c container[K, T]) keyAny() any {
+	return c.key
+}
+
+func (c container[K, T]) valueAny() any {
+	return c.value
 }

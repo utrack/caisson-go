@@ -79,41 +79,41 @@ func (c coder) WithHTTPCode(httpCode int) Coder {
 
 func (c coder) Wrap(cause error) error {
 	return DetailWith[Coded](cause, coded{
-		httpCode:    c.httpCode,
-		typ:         c.typ,
-		userMessage: c.userMessage,
+		HttpCode:    c.httpCode,
+		Typ:         c.typ,
+		UserMessage: c.userMessage,
 		cause:       cause,
 	})
 }
 
 type coded struct {
-	httpCode    int
-	typ         string
-	userMessage string
+	HttpCode    int `json:"http_code"`
+	Typ         string `json:"type"`
+	UserMessage string `json:"user_message"`
 	cause       error
 }
 
 var _ Coded = coded{}
 
 func (c coded) HTTPCode() int {
-	if c.httpCode == 0 {
+	if c.HttpCode == 0 {
 		return 500
 	}
-	return c.httpCode
+	return c.HttpCode
 }
 
 func (c coded) Message() string {
 	inner := Code(c.cause)
 
 	if inner != nil && inner.Message() != "" {
-		return inner.Message() + ": " + c.userMessage
+		return inner.Message() + ": " + c.UserMessage
 	}
 
-	return c.userMessage
+	return c.UserMessage
 }
 
 func (c coded) Type() string {
-	return c.typ
+	return c.Typ
 }
 
 func (c coded) Unwrap() error {

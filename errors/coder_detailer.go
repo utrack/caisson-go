@@ -49,6 +49,7 @@ func (c coderDetailer[T]) WithHTTPCode(httpCode int) CoderDetailer[T] {
 }
 
 func (c coderDetailer[T]) Wrap(cause error, details T) error {
+	// TODO use error type instead of T's reflect type
 	return DetailWith(c.coder.Wrap(cause), details)
 }
 
