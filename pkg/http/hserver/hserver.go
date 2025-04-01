@@ -45,15 +45,6 @@ type opts struct {
 
 type Option func(*opts)
 
-// WithAddr sets an address that the listener will listen to.
-//
-// Defaults to ":8080".
-func WithAddr(addr string) Option {
-	return func(o *opts) {
-		o.addr = addr
-	}
-}
-
 // WithName sets a name for the server that'll appear in the logs.
 //
 // Defaults to "primary".
@@ -66,9 +57,11 @@ func WithName(name string) Option {
 // New creates a new Server and starts listening immediately.
 // It is non-blocking; New() returns as soon as the listener is established.
 // Returns an error if the listener cannot be established.
-func New(optionFuncs ...Option) (*Server, error) {
+//
+// addr is a net address to listen on (e.g. "localhost:8080", ":8080", "127.0.0.1:8080", etc)
+func New(addr string, optionFuncs ...Option) (*Server, error) {
 	o := &opts{
-		addr: ":8080",
+		addr: addr,
 		name: "primary",
 	}
 	for _, opt := range optionFuncs {
