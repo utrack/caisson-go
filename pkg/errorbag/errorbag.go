@@ -85,7 +85,17 @@ func ListPairs(err error) map[string]any {
 	ret := make(map[string]any, 3)
 	for err != nil {
 		if bag, ok := err.(bagAny); ok {
-			ret[fmt.Sprintf("%s", bag.keyAny())] = bag.valueAny()
+			keyStr := fmt.Sprintf("%s", bag.keyAny())
+			if v, ok := ret[keyStr]; ok {
+				if asArray, ok := v.([]any); ok {
+					asArray = append(asArray, bag.valueAny())
+					ret[keyStr] = asArray
+				} else {
+					ret[keyStr] = []any{v, bag.valueAny()}
+				}
+			} else {
+				ret[keyStr] = bag.valueAny()
+			}
 		}
 		err = errors.Unwrap(err)
 	}
