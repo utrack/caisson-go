@@ -106,7 +106,7 @@ func (c coded) Message() string {
 	inner := Code(c.cause)
 
 	if inner != nil && inner.Message() != "" {
-		return inner.Message() + ": " + c.UserMessage
+		return c.UserMessage + ": " + inner.Message()
 	}
 
 	return c.UserMessage
