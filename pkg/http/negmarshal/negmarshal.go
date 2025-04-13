@@ -9,8 +9,11 @@ import (
 	contentnegotiation "gitlab.com/jamietanna/content-negotiation-go"
 )
 
+// MarshalFunc marshals the value in some single format (like json.Marshal or xml.Marshal).
 type MarshalFunc func(ctx context.Context, w io.Writer, v any) error
 
+// NegotiatedMarshalFunc marshals the value in the negotiated format,
+// based on the request's Accept header.
 type NegotiatedMarshalFunc func(r *http.Request, w io.Writer, v any) error
 
 // Default returns a NegotiatedMarshalFunc that supports JSON and XML outputs.

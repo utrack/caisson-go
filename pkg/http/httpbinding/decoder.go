@@ -41,19 +41,3 @@ func newHttpinDecoder(t reflect.Type) (requestDecoder, error) {
 
 	return unmEngine, nil
 }
-
-func hasTag(t reflect.Type, tag string) bool {
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		if _, ok := field.Tag.Lookup(tag); ok {
-			return true
-		}
-
-		if field.Anonymous && field.Type.Kind() == reflect.Struct {
-			if hasTag(field.Type, tag) {
-				return true
-			}
-		}
-	}
-	return false
-}

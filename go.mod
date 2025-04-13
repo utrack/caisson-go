@@ -8,12 +8,12 @@ require (
 	github.com/ggicci/httpin v0.19.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-logr/logr v1.4.2
-	github.com/jinzhu/copier v0.4.0
 	github.com/longkai/rfc7807 v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/utrack/envconfig v1.0.1
 	github.com/utrack/pontoon v0.4.1
 	gitlab.com/HnBI/shared-projects/go/platform v0.28.1
+	gitlab.com/jamietanna/content-negotiation-go v0.2.0
 	go.opentelemetry.io/otel v1.35.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.35.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.35.0
@@ -22,6 +22,7 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.35.0
 	go.opentelemetry.io/otel/sdk v1.35.0
 	go.opentelemetry.io/otel/sdk/metric v1.35.0
+	go.opentelemetry.io/otel/trace v1.35.0
 	golang.org/x/sync v0.12.0
 	google.golang.org/grpc v1.71.0
 )
@@ -59,11 +60,9 @@ require (
 	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	gitlab.com/jamietanna/content-negotiation-go v0.2.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel/bridge/opentracing v1.34.0 // indirect
 	go.opentelemetry.io/otel/metric v1.35.0 // indirect
-	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

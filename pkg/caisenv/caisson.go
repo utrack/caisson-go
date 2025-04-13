@@ -1,4 +1,4 @@
-package caisson
+package caisenv
 
 
 import _ "github.com/utrack/caisson-go/internal/caisenv"

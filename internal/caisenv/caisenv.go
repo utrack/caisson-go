@@ -2,6 +2,7 @@ package caisenv
 
 import (
 	"log/slog"
+	"os"
 
 	"github.com/go-logr/logr"
 	"github.com/utrack/caisson-go/pkg/caisconfig"
@@ -9,6 +10,9 @@ import (
 )
 
 func init() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	slog.SetLogLoggerLevel(slog.LevelDebug)
+
 	olog := logr.FromSlogHandler(slog.Default().Handler())
 	otel.SetLogger(olog)
 	initTracer()
