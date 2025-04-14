@@ -35,8 +35,10 @@ func Warne(ctx context.Context, msg string, err error, kvs ...any) {
 func errKvs(err error, kvs []any) []any {
 	kvs = append(kvs, "error.message", err.Error())
 	kvs = append(kvs, "error.stack", fmt.Sprintf("%+v", err))
-	kvs = append(kvs, "error.code", errors.Code(err).Type())
-	kvs = append(kvs, "error.user_message", errors.Code(err).Message())
+	if code := errors.Code(err); code != nil {
+		kvs = append(kvs, "error.code", code.Type())
+		kvs = append(kvs, "error.user_message", code.Message())
+	}
 
 	data := errorbag.ListPairs(err)
 	if len(data) > 0 {
