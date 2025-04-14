@@ -11,10 +11,15 @@ import (
 )
 
 func init() {
-	slog.SetDefault(slog.New(slogtrace.NewContextHandler(slog.NewJSONHandler(os.Stdout, nil))))
-	slog.SetLogLoggerLevel(slog.LevelDebug)
+	handler := slogtrace.NewContextHandler(
+		slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}))
 
-	olog := logr.FromSlogHandler(slog.Default().Handler())
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
+
+	olog := logr.FromSlogHandler(handler)
 	otel.SetLogger(olog)
 	initTracer()
 	initMetrics()
