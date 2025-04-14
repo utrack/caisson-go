@@ -20,6 +20,7 @@ func NewContextHandler(inner slog.Handler) slog.Handler {
 
 // Handle implements [slog.Handler].
 func (c *contextAdapter) Handle(ctx context.Context, r slog.Record) error {
+	r.Add(slog.String("severity_text", r.Level.String()))
 	if span := trace.SpanFromContext(ctx); span.IsRecording() {
 		spanCtx := span.SpanContext()
 		if spanCtx.HasTraceID() {
