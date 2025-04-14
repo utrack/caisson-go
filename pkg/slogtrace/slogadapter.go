@@ -20,7 +20,11 @@ func NewContextHandler(inner slog.Handler) slog.Handler {
 
 // Handle implements [slog.Handler].
 func (c *contextAdapter) Handle(ctx context.Context, r slog.Record) error {
-	r.Add(slog.String("severity_text", r.Level.String()))
+	levelText := r.Level.String()
+	if r.Level > 20 { // according to spec, https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitytext
+		levelText = "FATAL"
+	}
+	r.Add(slog.String("severity_text", levelText))
 	if span := trace.SpanFromContext(ctx); span.IsRecording() {
 		spanCtx := span.SpanContext()
 		if spanCtx.HasTraceID() {
