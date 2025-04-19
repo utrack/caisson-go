@@ -5,11 +5,14 @@ go 1.23.0
 toolchain go1.24.1
 
 require (
+	github.com/felixge/fgprof v0.9.4
 	github.com/ggicci/httpin v0.19.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-logr/logr v1.4.2
 	github.com/longkai/rfc7807 v1.0.0
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/client_golang v1.19.0
+	github.com/riandyrn/otelchi v0.12.1
 	github.com/utrack/envconfig v1.0.1
 	github.com/utrack/pontoon v0.4.1
 	gitlab.com/HnBI/shared-projects/go/platform v0.28.1
@@ -37,10 +40,12 @@ require (
 	github.com/DataDog/gostackparse v0.7.0 // indirect
 	github.com/DataDog/sketches-go v1.4.6 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ebitengine/purego v0.7.1 // indirect
+	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/ggicci/owl v0.8.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/pprof v0.0.0-20240721033354-7089f98c1d14 // indirect
@@ -54,6 +59,9 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/outcaste-io/ristretto v0.2.3 // indirect
 	github.com/philhofer/fwd v1.1.2 // indirect
+	github.com/prometheus/client_model v0.5.0 // indirect
+	github.com/prometheus/common v0.48.0 // indirect
+	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/richardartoul/molecule v1.0.1-0.20240531184615-7ca0df43c0b3 // indirect
 	github.com/secure-systems-lab/go-securesystemslib v0.7.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect

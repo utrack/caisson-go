@@ -1,4 +1,4 @@
-package caisconfig
+package plconfig
 
 import (
 	"runtime/debug"
@@ -28,7 +28,7 @@ func read() (*Config, error) {
 	if c.ServiceName == "" {
 		dInfo, ok := debug.ReadBuildInfo()
 		if !ok {
-			return nil, errors.Wrap(err, "failed to read Go build info and Caisson service_name is empty")
+			return nil, errors.Wrap(err, "failed to read Go build info and service_name is empty")
 		}
 		c.ServiceName = dInfo.Main.Path
 	}
@@ -36,7 +36,7 @@ func read() (*Config, error) {
 	c.ServiceName = strings.ReplaceAll(c.ServiceName, "/", "-")
 
 	if c.Otel.Enable && c.Otel.CollectorEndpoint == "" {
-		return nil, errors.Errorf("caisconfig: OTEL_COLLECTOR_ENDPOINT is required when OTEL_ENABLE is true")
+		return nil, errors.Errorf("caisson/baseconfig: OTEL_COLLECTOR_ENDPOINT is required when OTEL_ENABLE is true")
 	}
 	return &c, nil
 }

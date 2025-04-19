@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/utrack/caisson-go/errors"
-	"github.com/utrack/caisson-go/pkg/caisconfig"
+	"github.com/utrack/caisson-go/pkg/plconfig"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -14,6 +14,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/propagation"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -24,7 +25,7 @@ import (
 
 func initTracer() func(context.Context) error {
 
-	cfg := caisconfig.Get()
+	cfg := plconfig.Get()
 
 	var exporter sdktrace.SpanExporter
 	var err error
@@ -73,12 +74,13 @@ func initTracer() func(context.Context) error {
 			sdktrace.WithResource(resources),
 		),
 	)
+	otel.SetTextMapPropagator(propagation.TraceContext{})
 	return exporter.Shutdown
 }
 
 func initMetrics() func(context.Context) error {
 
-	cfg := caisconfig.Get()
+	cfg := plconfig.Get()
 
 	var exporter metric.Exporter
 	var err error

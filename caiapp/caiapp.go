@@ -1,0 +1,167 @@
+package caiapp
+
+import (
+	"context"
+	"net/http"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
+	"time"
+
+	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/riandyrn/otelchi"
+	otelchimetric "github.com/riandyrn/otelchi/metric"
+	"github.com/utrack/caisson-go/caiapp/internal/cappconfig"
+	"github.com/utrack/caisson-go/caiapp/internal/hchi"
+	"github.com/utrack/caisson-go/caiapp/internal/hdebug"
+	"github.com/utrack/caisson-go/closer"
+	"github.com/utrack/caisson-go/errors"
+	"github.com/utrack/caisson-go/log"
+	"github.com/utrack/caisson-go/pkg/caisenv"
+	"github.com/utrack/caisson-go/pkg/http/hhandler"
+	"github.com/utrack/caisson-go/pkg/http/hserver"
+	"github.com/utrack/caisson-go/pkg/plconfig"
+	"golang.org/x/sync/errgroup"
+)
+
+type App struct {
+	handlers *Handlers
+	hsrv     *hserver.Server
+	setReady func(bool)
+	eg       *errgroup.Group
+	egCtx    context.Context
+}
+
+func New() (*App, error) {
+
+	caisenv.Ensure()
+
+	cfg, err := cappconfig.Get()
+	if err != nil {
+		return nil, errors.Wrap(err, "when configuring caiapp")
+	}
+
+	debugListener, err := hserver.New(cfg.Server.AddrDebug+":"+strconv.Itoa(cfg.Server.PortDebug), hserver.WithName("debug"))
+	if err != nil {
+		return nil, errors.Wrap(err, "when creating a debug HTTP server")
+	}
+
+	debugMux := hdebug.New()
+	debugHandler, err := debugMux.Build()
+	if err != nil {
+		return nil, errors.Wrap(err, "when creating a debug HTTP handler")
+	}
+
+	eg, egCtx := errgroup.WithContext(context.Background())
+
+	eg.Go(func() error {
+		// use Background since we don't want to stop debug ever
+		return debugListener.Run(context.Background(), debugHandler)
+	})
+
+	mainSrv, err := hserver.New(cfg.Server.AddrHTTP+":"+strconv.Itoa(cfg.Server.PortHTTP), hserver.WithName("main"))
+	if err != nil {
+		return nil, errors.Wrap(err, "when creating main HTTP server")
+	}
+
+	mainHdl := hchi.New()
+
+	return &App{
+		hsrv:     mainSrv,
+		handlers: &Handlers{http: mainHdl},
+		setReady: debugMux.SetReady,
+		eg:       eg,
+		egCtx:    egCtx,
+	}, nil
+}
+
+func (a *App) Handlers() *Handlers {
+	return a.handlers
+}
+
+func (a *App) Run(ctx context.Context) error {
+
+	cfg, err := cappconfig.Get()
+	if err != nil {
+		return errors.Wrap(err, "when reading caisson caiapp config")
+	}
+
+	ctx = log.With(ctx, "module", "caiapp")
+
+	log.Info(ctx, "caiapp starting")
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	caiconf := plconfig.Get()
+
+	otelChiCfg := otelchimetric.NewBaseConfig(caiconf.ServiceName)
+	hsrv := a.handlers.http
+	// Prepend critical middlewares - request logger,
+	// metrics, recovery, tracer etc.
+	// They should go in front of the app-provided middlewares.
+	hsrv.Apply(func(o *hhandler.Options) {
+		o.Middlewares = append([]func(http.Handler) http.Handler{
+
+			chimw.RealIP,
+			otelchi.Middleware(caiconf.ServiceName,
+				otelchi.WithPublicEndpoint(),
+				otelchi.WithTraceResponseHeaders(otelchi.TraceHeaderConfig{
+					TraceIDHeader:      "X-Trace-Id",
+					TraceSampledHeader: "X-Trace-Sampled",
+				}),
+			),
+			otelchimetric.NewRequestDurationMillis(otelChiCfg),
+			otelchimetric.NewRequestInFlight(otelChiCfg),
+			otelchimetric.NewResponseSizeBytes(otelChiCfg),
+			chimw.Recoverer,
+		}, o.Middlewares...)
+	})
+
+	finalHandler, err := hsrv.Build()
+	if err != nil {
+		return errors.Wrap(err, "when building main HTTP handler")
+	}
+
+	closer.RegisterFuncC(a.hsrv.GracefulStop)
+
+	a.eg.Go(func() error {
+		err := a.hsrv.Run(ctx, finalHandler)
+		if errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return errors.Wrap(err, "when running main HTTP server")
+	})
+
+	// wait for possible errors from the handler
+	select {
+	case <-time.After(100 * time.Millisecond):
+	case <-a.egCtx.Done():
+		return errors.Wrap(a.egCtx.Err(), "when running main HTTP server")
+	}
+
+	a.setReady(true)
+
+	select {
+	case <-a.egCtx.Done():
+	case <-ctx.Done():
+		log.Info(ctx, "caiapp: app.Run() context canceled", "reason", ctx.Err())
+	case sig := <-sigs:
+		log.Info(ctx, "caiapp: caught signal", "signal", sig)
+	}
+
+	log.Warn(ctx, "initiating graceful shutdown, Ctrl-C again to force exit", "grace_delay", cfg.GracefulShutdown.Delay, "grace_timeout", cfg.GracefulShutdown.Timeout)
+
+	// die on ^C^C
+	go func() {
+		sig := <-sigs
+		log.Fatal(ctx, "second signal,terminating", "sig", sig.String())
+	}()
+	a.setReady(false)
+
+	<-time.After(cfg.GracefulShutdown.Delay)
+	log.Info(ctx, "graceful shutdown delay expired, shutting down")
+
+	return caisenv.Stop(ctx)
+}
