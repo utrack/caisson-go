@@ -8,8 +8,8 @@ import (
 
 type OptionHTTP = hhandler.OptionHTTP
 
-func WithGlobalMiddleware(middleware func(http.Handler) http.Handler) OptionHTTP {
+func WithGlobalMiddleware(middleware ...func(http.Handler) http.Handler) OptionHTTP {
 	return func(o *hhandler.Options) {
-		o.Middlewares = append(o.Middlewares, middleware)
+		o.Middlewares = append(o.Middlewares, middleware...)
 	}
 }
