@@ -15,6 +15,7 @@ import (
 	"github.com/utrack/caisson-go/caiapp/internal/cappconfig"
 	"github.com/utrack/caisson-go/caiapp/internal/hchi"
 	"github.com/utrack/caisson-go/caiapp/internal/hdebug"
+	"github.com/utrack/caisson-go/caiapp/internal/sdescbind"
 	"github.com/utrack/caisson-go/closer"
 	"github.com/utrack/caisson-go/errors"
 	"github.com/utrack/caisson-go/log"
@@ -22,6 +23,7 @@ import (
 	"github.com/utrack/caisson-go/pkg/http/hhandler"
 	"github.com/utrack/caisson-go/pkg/http/hserver"
 	"github.com/utrack/caisson-go/pkg/plconfig"
+	"github.com/utrack/pontoon/sdesc"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -80,7 +82,7 @@ func (a *App) Handlers() *Handlers {
 	return a.handlers
 }
 
-func (a *App) Run(ctx context.Context) error {
+func (a *App) Run(ctx context.Context, services ...sdesc.Service) error {
 
 	cfg, err := cappconfig.Get()
 	if err != nil {
@@ -118,6 +120,13 @@ func (a *App) Run(ctx context.Context) error {
 			chimw.Recoverer,
 		}, o.Middlewares...)
 	})
+
+	for i, s := range services {
+		err := sdescbind.Bind(s, a.handlers.http)
+		if err != nil {
+			return errors.Wrapf(err, "when binding HTTP handlers for service %d (%T)", i, s)
+		}
+	}
 
 	finalHandler, err := hsrv.Build()
 	if err != nil {

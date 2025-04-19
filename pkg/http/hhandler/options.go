@@ -15,6 +15,11 @@ type Options struct {
 
 	TlsConfig   *tls.Config
 	Middlewares []func(http.Handler) http.Handler
+
+	// Extensions is a free-form field for framework-specific extensions.
+	//
+	// It is not used by the Caisson framework.
+	Extensions any
 }
 
 type OptionHTTP func(o *Options)
