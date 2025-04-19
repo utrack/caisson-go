@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/utrack/caisson-go/errors"
 	"github.com/utrack/caisson-go/pkg/http/errmarshalhttp"
 	"github.com/utrack/caisson-go/pkg/http/hhandler"
@@ -13,12 +14,17 @@ import (
 )
 
 func Bind(s sdesc.Service, h hhandler.Handler) error {
+	sconfig := sdesc.HandlerConfig{}
+	for _, opt := range s.ServiceOptions() {
+		opt(&sconfig)
+	}
 	b := &binder{
 		errorRender: func(ctx context.Context, r *http.Request, w http.ResponseWriter, err error) {
 			errmarshalhttp.Marshal(err, w, r)
 		},
-		neg: negmarshal.Default(),
-		h:   h,
+		neg:     negmarshal.Default(),
+		h:       h,
+		sconfig: sconfig,
 	}
 	s.RegisterHTTP(b)
 
@@ -29,6 +35,7 @@ type binder struct {
 	errorRender httpbinding.ErrorRenderer
 	neg         negmarshal.NegotiatedMarshalFunc
 	h           hhandler.Handler
+	sconfig     sdesc.HandlerConfig
 
 	bindError error
 }
@@ -41,6 +48,8 @@ func (b *binder) MethodFunc(method, pattern string, hdl sdesc.RPCHandler) {
 		b.bindError = errors.Wrapd(err, "when binding HTTP handler", "method", method, "pattern", pattern)
 		return
 	}
-	// TODO implement ServiceOptions
-	b.h.MethodFunc(method, pattern, handler.ServeHTTP)
+
+	mws := chi.Middlewares(b.sconfig.Middlewares())
+
+	b.h.MethodFunc(method, pattern, mws.HandlerFunc(handler.ServeHTTP).ServeHTTP)
 }
