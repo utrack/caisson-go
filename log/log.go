@@ -68,7 +68,7 @@ func Errorne(ctx context.Context, err error, kvs ...any) {
 }
 
 func Fatal(ctx context.Context, msg string, kvs ...any) {
-	fromCtx(ctx).ErrorContext(ctx, msg, kvs...)
+	fromCtx(ctx).Log(ctx, 21, msg, kvs...)
 	os.Exit(1)
 }
 
