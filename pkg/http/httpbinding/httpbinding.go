@@ -10,8 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/utrack/caisson-go/pkg/http/negmarshal"
 	"github.com/utrack/pontoon/sdesc"
-	"gitlab.com/HnBI/shared-projects/go/platform/bootstrap/httputil"
-	"gitlab.com/HnBI/shared-projects/go/platform/errors"
+	"github.com/utrack/caisson-go/errors"
 )
 
 var (
@@ -23,6 +22,8 @@ var (
 func init() {
 	integration.UseGochiURLParam("path", chi.URLParam)
 }
+
+var ErrMalformedRequest = errors.NewCoder("BAD_REQUEST").WithHTTPCode(400).WithMessage("malformed request body")
 
 // wrapDescRPCHandler converts sdesc.RPCHandler to stdlib http.HandlerFunc.
 // It can wrap handlers that accept any/all of *http.Request, http.ResponseWriter
@@ -85,7 +86,7 @@ func BindHTTPHandler(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler negm
 				if err != nil {
 					var invalidFieldError *core.InvalidFieldError
 					if errors.As(err, &invalidFieldError) {
-						return reflect.Value{}, httputil.ErrMalformedInput(err)
+						return reflect.Value{}, ErrMalformedRequest.Wrap(err)
 					}
 					return reflect.Value{}, errors.Wrap(err, "failed to decode HTTPin request")
 				}
