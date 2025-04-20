@@ -32,7 +32,7 @@ type Server struct {
 	eg    *errgroup.Group
 	egCtx context.Context
 
-	srv *http.Server
+	srvStop func(context.Context) error
 }
 
 type opts struct {
@@ -88,6 +88,7 @@ func New(addr string, optionFuncs ...Option) (*Server, error) {
 // Blocks until the server stops or the context is canceled.
 // If a context is canceled, the server will be stopped immediately.
 func (s *Server) Run(ctx context.Context, h *http.Server) error {
+	s.srvStop = h.Shutdown
 
 	// start serving requests
 	s.eg.Go(func() error {
@@ -148,7 +149,10 @@ func (s *Server) GracefulStop(ctx context.Context) error {
 	s.readyToServe.Set(false)
 
 	s.eg.Go(func() error {
-		return errors.Wrap(s.srv.Shutdown(ctx), "failed to gracefully stop the server")
+		if s.srvStop == nil {
+			return nil
+		}
+		return errors.Wrap(s.srvStop(ctx), "failed to gracefully stop the server")
 	})
 
 	err := s.eg.Wait()
