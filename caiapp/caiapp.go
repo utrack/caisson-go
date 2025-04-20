@@ -108,7 +108,6 @@ func (a *App) Run(ctx context.Context, services ...sdesc.Service) error {
 
 			chimw.RealIP,
 			otelchi.Middleware(caiconf.ServiceName,
-				otelchi.WithPublicEndpoint(),
 				otelchi.WithTraceResponseHeaders(otelchi.TraceHeaderConfig{
 					TraceIDHeader:      "X-Trace-Id",
 					TraceSampledHeader: "X-Trace-Sampled",
