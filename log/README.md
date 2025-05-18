@@ -4,6 +4,11 @@ Package log provides a structured logging package; enforces the usage of context
 
 ## Usage
 
+Suitable for general use. Minimally opinionated and extendable.  
+Make sure to set up the global `slog` logger; example is at [internal/caisenv/caisenv.go](https://github.com/utrack/caisson-go/blob/main/internal/caisenv/caisenv.go#L19).
+
+TODO godoc
+
 ## Rationale
 
 The stdlib `log`/`slog` packages do not enforce the usage of context for logging, leading to nasty logs in production.

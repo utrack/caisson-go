@@ -15,6 +15,8 @@ import (
 )
 
 func init() {
+
+	// slogtrace extracts trace_id/span_id from the context. Use it for the global logger.
 	handler := slogtrace.NewContextHandler(
 		slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			Level: slog.LevelDebug,
