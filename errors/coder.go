@@ -13,7 +13,7 @@ type Coder interface {
 	Wrap(cause error) error
 }
 
-// Coded is an interface for errors enriched with HTTP codes and user messages.
+// Coded is an error instance enriched with HTTP codes and user messages.
 type Coded interface {
 	HTTPCode() int
 	Message() string
@@ -34,60 +34,59 @@ func Code(err error) Coded {
 }
 
 func NewCoder(typ string) Coder {
-	return coder{typ: typ}
+	return coder{data: coded{
+		Typ:         typ,
+		HttpCode:    500,
+		UserMessage: "",
+	}}
 }
 
 type coder struct {
-	httpCode    int
-	typ         string
-	userMessage string
+	data coded
 }
 
 var _ Coder = coder{}
 
 func (c coder) WithType(typ string) Coder {
+	d := c.data
+	d.Typ = typ
 	return coder{
-		httpCode:    c.httpCode,
-		typ:         typ,
-		userMessage: c.userMessage,
+		data: d,
 	}
 }
 
 func (c coder) WithMessage(userMessage string) Coder {
+	d := c.data
+	d.UserMessage = userMessage
 	return coder{
-		httpCode:    c.httpCode,
-		typ:         c.typ,
-		userMessage: userMessage,
+		data: d,
 	}
 }
 
 func (c coder) WithMessagef(format string, args ...any) Coder {
+	d := c.data
+	d.UserMessage = fmt.Sprintf(format, args...)
 	return coder{
-		httpCode:    c.httpCode,
-		typ:         c.typ,
-		userMessage: fmt.Sprintf(format, args...),
+		data: d,
 	}
 }
 
 func (c coder) WithHTTPCode(httpCode int) Coder {
+	d := c.data
+	d.HttpCode = httpCode
 	return coder{
-		httpCode:    httpCode,
-		typ:         c.typ,
-		userMessage: c.userMessage,
+		data: d,
 	}
 }
 
 func (c coder) Wrap(cause error) error {
-	return DetailWith[Coded](cause, coded{
-		HttpCode:    c.httpCode,
-		Typ:         c.typ,
-		UserMessage: c.userMessage,
-		cause:       cause,
-	})
+	d := c.data
+	d.cause = cause
+	return DetailWith[Coded](cause, d)
 }
 
 type coded struct {
-	HttpCode    int `json:"http_code"`
+	HttpCode    int    `json:"http_code"`
 	Typ         string `json:"type"`
 	UserMessage string `json:"user_message"`
 	cause       error

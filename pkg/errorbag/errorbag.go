@@ -110,7 +110,7 @@ type container[K comparable, T any] struct {
 }
 
 func (c container[K, T]) Error() string {
-	return c.cause.Error() + fmt.Sprintf("[%v: %v]", c.key, c.value)
+	return c.cause.Error()
 }
 
 func (c container[K, T]) Key() K {

@@ -8,7 +8,7 @@ import (
 
 // DetailWith adds a typed detail to the error.
 // To retrieve it, cast the error to Detailed[T] and call Details() like so:
-
+//
 // var d Detailed[MyDetailType]
 // ok := errors.As(err, &d)
 //

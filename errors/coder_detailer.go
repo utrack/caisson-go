@@ -9,11 +9,15 @@ type CoderDetailer[T any] interface {
 	WithMessagef(format string, args ...any) CoderDetailer[T]
 	WithHTTPCode(httpCode int) CoderDetailer[T]
 	Wrap(cause error, details T) error
-	
-	// Details extracts the embedded details from the error decorated via Wrap().
-	Details(err error) *T
+
+	// ExtractDetail extracts the embedded details from the error instance decorated via Wrap().
+	ExtractDetail(err error) *T
 }
 
+// NewCoderDetailer is an equivalent of [NewCoder], but enriched with a typed context.
+// Use it to emit Coded errors which provide additional context structs to the error.
+//
+// As an example, you can return protocol errors (a-la pq.Error), or additional error context for your frontend.
 func NewCoderDetailer[T any](typ string) CoderDetailer[T] {
 	return coderDetailer[T]{coder: NewCoder(typ)}
 }
@@ -53,7 +57,7 @@ func (c coderDetailer[T]) Wrap(cause error, details T) error {
 	return DetailWith(c.coder.Wrap(cause), details)
 }
 
-func (c coderDetailer[T]) Details(err error) *T {
+func (c coderDetailer[T]) ExtractDetail(err error) *T {
 	var d Detailed[T]
 	ok := As(err, &d)
 	if ok {
