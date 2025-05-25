@@ -1,4 +1,4 @@
-# caisson-go
+# caisson-go [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/utrack/caisson-go)
 Caisson is a meta-platform library for Go. A modular platform which you can pick up as is, or use it to build your own.
 
 The layout of the repository is as follows:
