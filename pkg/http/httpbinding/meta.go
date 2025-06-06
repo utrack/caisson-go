@@ -8,7 +8,7 @@ type Meta struct {
 	InputType  reflect.Type
 	OutputType reflect.Type
 
-	NamedFunc reflect.Value
+	NamedFunc any
 
 	WriterIntercepted bool
 }

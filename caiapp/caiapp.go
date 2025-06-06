@@ -135,6 +135,7 @@ func (a *App) Run(ctx context.Context, services ...sdesc.Service) error {
 		return errors.Wrap(err, "when generating OpenAPI document")
 	}
 
+	// TODO move away
 	hsrv.MethodFunc("GET", "/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/openapi+yaml")
 		b, err := doc.Render()
@@ -144,6 +145,33 @@ func (a *App) Run(ctx context.Context, services ...sdesc.Service) error {
 			return
 		}
 		_, _ = w.Write(b)
+	})
+	hsrv.HandleFunc("/docs/", func(w http.ResponseWriter, r *http.Request) {
+		ret := `
+		<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Elements in HTML</title>
+  
+    <script src="https://unpkg.com/@stoplight/elements/web-components.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements/styles.min.css">
+  </head>
+  <body>
+
+    <elements-api
+      apiDescriptionUrl="/openapi.yaml"
+      router="hash"
+    />
+
+  </body>
+</html>
+		
+		`
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(ret))
+
 	})
 
 	finalHandler, err := hsrv.Build()

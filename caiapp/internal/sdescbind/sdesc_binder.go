@@ -59,7 +59,7 @@ func (b *binder) MethodFunc(method, pattern string, hdl sdesc.RPCHandler) {
 	b.handlerMeta = append(b.handlerMeta, oapigen.HandlerDesc{
 		Method: method,
 		Path:   pattern,
-		Func:   hdl,
+		Func:   meta.NamedFunc,
 		Input:  meta.InputType,
 		Output: meta.OutputType,
 	})

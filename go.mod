@@ -16,7 +16,7 @@ require (
 	github.com/riandyrn/otelchi v0.12.1
 	github.com/utrack/envconfig v1.0.1
 	github.com/utrack/pontoon v0.4.1
-	github.com/utrack/pontoon/v2 v2.0.0-b2
+	github.com/utrack/pontoon/v2 v2.0.0-b3
 	gitlab.com/jamietanna/content-negotiation-go v0.2.0
 	go.opentelemetry.io/otel v1.35.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.35.0
@@ -30,6 +30,8 @@ require (
 	golang.org/x/sync v0.13.0
 	google.golang.org/grpc v1.71.1
 )
+
+//replace github.com/utrack/pontoon/v2 => ../../ghown/pontoon
 
 require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect

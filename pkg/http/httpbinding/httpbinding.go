@@ -88,7 +88,7 @@ func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler 
 				return reflect.ValueOf(w), nil
 			})
 		default:
-			inType := funcType.In(i)
+			inType = funcType.In(i)
 
 			unmEngine, err := newHttpinDecoder(inType)
 			if err != nil {
@@ -116,7 +116,7 @@ func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler 
 	}
 
 	retMeta := Meta{
-		NamedFunc:         handleFuncRef,
+		NamedFunc:         h,
 		WriterIntercepted: controlsResponseWriter,
 	}
 

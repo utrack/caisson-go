@@ -22,12 +22,10 @@ func GenerateOAPI(handlers []HandlerDesc) (*v3.Document, error) {
 	for _, d := range handlers {
 		opts := []httpinoapi.Option{}
 		if d.Input != nil {
-			st := reflect.New(d.Input).Elem().Interface()
-			opts = append(opts, httpinoapi.WithInputStruct(st))
+			opts = append(opts, httpinoapi.WithInputType(d.Input))
 		}
 		if d.Output != nil {
-			st := reflect.New(d.Output).Elem().Interface()
-			opts = append(opts, httpinoapi.WithOutputStruct(st))
+			opts = append(opts, httpinoapi.WithOutputType(d.Output))
 		}
 		gen.Operation(d.Method, d.Path, d.Func, opts...)
 	}
