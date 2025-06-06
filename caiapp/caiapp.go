@@ -15,6 +15,7 @@ import (
 	"github.com/utrack/caisson-go/caiapp/internal/cappconfig"
 	"github.com/utrack/caisson-go/caiapp/internal/hchi"
 	"github.com/utrack/caisson-go/caiapp/internal/hdebug"
+	"github.com/utrack/caisson-go/caiapp/internal/oapigen"
 	"github.com/utrack/caisson-go/caiapp/internal/sdescbind"
 	"github.com/utrack/caisson-go/closer"
 	"github.com/utrack/caisson-go/errors"
@@ -120,11 +121,13 @@ func (a *App) Run(ctx context.Context, services ...sdesc.Service) error {
 		}, o.Middlewares...)
 	})
 
+	handlerDocMeta := []oapigen.HandlerDesc{}
 	for i, s := range services {
-		err := sdescbind.Bind(s, a.handlers.http)
+		hdl, err := sdescbind.Bind(s, a.handlers.http)
 		if err != nil {
 			return errors.Wrapf(err, "when binding HTTP handlers for service %d (%T)", i, s)
 		}
+		handlerDocMeta = append(handlerDocMeta, hdl...)
 	}
 
 	finalHandler, err := hsrv.Build()
