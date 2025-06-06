@@ -130,6 +130,22 @@ func (a *App) Run(ctx context.Context, services ...sdesc.Service) error {
 		handlerDocMeta = append(handlerDocMeta, hdl...)
 	}
 
+	doc, err := oapigen.GenerateOAPI(handlerDocMeta)
+	if err != nil {
+		return errors.Wrap(err, "when generating OpenAPI document")
+	}
+
+	hsrv.MethodFunc("GET", "/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/openapi+yaml")
+		b, err := doc.Render()
+		if err != nil {
+			log.Error(r.Context(), "when rendering OpenAPI document", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		_, _ = w.Write(b)
+	})
+
 	finalHandler, err := hsrv.Build()
 	if err != nil {
 		return errors.Wrap(err, "when building main HTTP handler")
