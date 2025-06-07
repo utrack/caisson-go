@@ -47,7 +47,7 @@ func New(mm map[string]MarshalFunc, defaultMarshaler MarshalFunc) *negotiator {
 
 func (n *negotiator) Marshal(r *http.Request, w io.Writer, v any) error {
 	accepts := r.Header.Get("Accept")
-	if accepts == "" {
+	if accepts == "" || accepts == "*/*" {
 		m := n.defaultm
 		if m == nil {
 			return errors.New("no default marshaler provided")
