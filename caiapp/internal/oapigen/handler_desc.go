@@ -1,9 +1,11 @@
 package oapigen
 
 import (
+	"path"
 	"reflect"
 
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/utrack/caisson-go/caiapp/internal/hchi"
 	"github.com/utrack/pontoon/v2/httpinoapi"
 )
 
@@ -16,7 +18,7 @@ type HandlerDesc struct {
 	Output reflect.Type
 }
 
-func GenerateOAPI(handlers []HandlerDesc) (*v3.Document, error) {
+func GenerateOAPI(handlers []HandlerDesc, ropts hchi.OptionExtensions) (*v3.Document, error) {
 	gen := httpinoapi.NewGenerator()
 
 	for _, d := range handlers {
@@ -27,7 +29,7 @@ func GenerateOAPI(handlers []HandlerDesc) (*v3.Document, error) {
 		if d.Output != nil {
 			opts = append(opts, httpinoapi.WithOutputType(d.Output))
 		}
-		gen.Operation(d.Method, d.Path, d.Func, opts...)
+		gen.Operation(d.Method, path.Join(ropts.Prefix, d.Path), d.Func, opts...)
 	}
 
 	return gen.Build()

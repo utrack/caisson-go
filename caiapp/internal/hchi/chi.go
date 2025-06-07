@@ -16,6 +16,10 @@ type ChiHandler struct {
 	options hhandler.Options
 }
 
+type OptionExtensions struct {
+	Prefix string
+}
+
 type route struct {
 	method  string
 	pattern string
@@ -29,7 +33,8 @@ func New() *ChiHandler {
 	}
 	return &ChiHandler{
 		options: hhandler.Options{
-			Server: srv,
+			Server:     srv,
+			Extensions: OptionExtensions{},
 		},
 	}
 }
@@ -38,6 +43,10 @@ func (c *ChiHandler) Apply(oo ...hhandler.OptionHTTP) {
 	for _, o := range oo {
 		o(&c.options)
 	}
+}
+
+func (c *ChiHandler) Extensions() OptionExtensions {
+	return c.options.Extensions.(OptionExtensions)
 }
 
 func (c *ChiHandler) MethodFunc(method string, pattern string, hdl http.HandlerFunc) {
@@ -51,7 +60,6 @@ func (c *ChiHandler) HandleFunc(pattern string, hdl http.HandlerFunc) {
 func (c *ChiHandler) Build() (*http.Server, error) {
 	srv := c.options.Server
 	var router chi.Router = chi.NewRouter()
-	router = router.With(c.options.Middlewares...)
 
 	for _, r := range c.routes {
 		switch r.method {
@@ -61,6 +69,17 @@ func (c *ChiHandler) Build() (*http.Server, error) {
 			router.MethodFunc(r.method, r.pattern, r.handler)
 		}
 	}
-	srv.Handler = router
+
+	var finalHandler http.Handler = router
+	if c.options.Extensions != nil {
+		extensions := c.options.Extensions.(OptionExtensions)
+
+		if extensions.Prefix != "" {
+			outerRouter := chi.NewRouter()
+			outerRouter.Mount(extensions.Prefix, router)
+			finalHandler = outerRouter
+		}
+	}
+	srv.Handler = finalHandler
 	return srv, nil
 }

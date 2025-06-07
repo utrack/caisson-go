@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path"
 	"strconv"
 	"syscall"
 	"time"
@@ -130,7 +131,8 @@ func (a *App) Run(ctx context.Context, services ...sdesc.Service) error {
 		handlerDocMeta = append(handlerDocMeta, hdl...)
 	}
 
-	doc, err := oapigen.GenerateOAPI(handlerDocMeta)
+	hExts := hsrv.Extensions()
+	doc, err := oapigen.GenerateOAPI(handlerDocMeta, hExts)
 	if err != nil {
 		return errors.Wrap(err, "when generating OpenAPI document")
 	}
@@ -146,6 +148,9 @@ func (a *App) Run(ctx context.Context, services ...sdesc.Service) error {
 		}
 		_, _ = w.Write(b)
 	})
+
+	oapiPath := path.Join(hExts.Prefix, "/openapi.yaml")
+
 	hsrv.HandleFunc("/docs/", func(w http.ResponseWriter, r *http.Request) {
 		ret := `
 		<!doctype html>
@@ -161,7 +166,7 @@ func (a *App) Run(ctx context.Context, services ...sdesc.Service) error {
   <body>
 
     <elements-api
-      apiDescriptionUrl="/openapi.yaml"
+      apiDescriptionUrl="` + oapiPath + `"
       router="hash"
     />
 
