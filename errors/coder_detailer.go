@@ -10,6 +10,8 @@ type CoderDetailer[T any] interface {
 	WithHTTPCode(httpCode int) CoderDetailer[T]
 	Wrap(cause error, details T) error
 
+	Error() string
+
 	// ExtractDetail extracts the embedded details from the error instance decorated via Wrap().
 	ExtractDetail(err error) *T
 }
@@ -50,6 +52,10 @@ func (c coderDetailer[T]) WithHTTPCode(httpCode int) CoderDetailer[T] {
 	return coderDetailer[T]{
 		c.coder.WithHTTPCode(httpCode),
 	}
+}
+
+func (c coderDetailer[T]) Error() string {
+	return c.coder.Error()
 }
 
 func (c coderDetailer[T]) Wrap(cause error, details T) error {

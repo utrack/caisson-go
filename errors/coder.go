@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -11,6 +12,7 @@ type Coder interface {
 	WithMessagef(format string, args ...any) Coder
 	WithHTTPCode(httpCode int) Coder
 	Wrap(cause error) error
+	Error() string
 }
 
 // Coded is an error instance enriched with HTTP codes and user messages.
@@ -85,6 +87,16 @@ func (c coder) Wrap(cause error) error {
 	return DetailWith[Coded](cause, d)
 }
 
+func (c coder) Error() string {
+	return fmt.Sprintf("non-wrapped %s: %s", c.data.Typ, c.data.UserMessage)
+}
+
+func (c coder) Is(target error) bool {
+	var t coder
+	// TODO test-cover
+	return errors.As(target, &t) && t.data.Typ == c.data.Typ && t.data.HttpCode == c.data.HttpCode && t.data.UserMessage == c.data.UserMessage
+}
+
 type coded struct {
 	HttpCode    int    `json:"http_code"`
 	Typ         string `json:"type"`
@@ -121,4 +133,9 @@ func (c coded) Unwrap() error {
 
 func (c coded) Error() string {
 	return c.cause.Error()
+}
+
+func (c coded) Is(target error) bool {
+	var t Coded
+	return errors.As(target, &t) && t.Type() == c.Typ && t.HTTPCode() == c.HttpCode && t.Message() == c.UserMessage
 }
