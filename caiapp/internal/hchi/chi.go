@@ -70,6 +70,8 @@ func (c *ChiHandler) Build() (*http.Server, error) {
 		}
 	}
 
+	router.Use(c.options.Middlewares...)
+
 	var finalHandler http.Handler = router
 	if c.options.Extensions != nil {
 		extensions := c.options.Extensions.(OptionExtensions)
