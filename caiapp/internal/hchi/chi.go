@@ -61,6 +61,8 @@ func (c *ChiHandler) Build() (*http.Server, error) {
 	srv := c.options.Server
 	var router chi.Router = chi.NewRouter()
 
+	router.Use(c.options.Middlewares...)
+
 	for _, r := range c.routes {
 		switch r.method {
 		case "":
@@ -69,8 +71,6 @@ func (c *ChiHandler) Build() (*http.Server, error) {
 			router.MethodFunc(r.method, r.pattern, r.handler)
 		}
 	}
-
-	router.Use(c.options.Middlewares...)
 
 	var finalHandler http.Handler = router
 	if c.options.Extensions != nil {
