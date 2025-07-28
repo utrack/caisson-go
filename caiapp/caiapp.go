@@ -20,10 +20,10 @@ import (
 	"github.com/utrack/caisson-go/caiapp/internal/sdescbind"
 	"github.com/utrack/caisson-go/closer"
 	"github.com/utrack/caisson-go/errors"
+	"github.com/utrack/caisson-go/levels/level3/servers/l3http"
 	"github.com/utrack/caisson-go/log"
 	"github.com/utrack/caisson-go/pkg/caisenv"
 	"github.com/utrack/caisson-go/pkg/http/hhandler"
-	"github.com/utrack/caisson-go/pkg/http/hserver"
 	"github.com/utrack/caisson-go/pkg/plconfig"
 	"github.com/utrack/pontoon/sdesc"
 	"golang.org/x/sync/errgroup"
@@ -31,7 +31,7 @@ import (
 
 type App struct {
 	handlers *Handlers
-	hsrv     *hserver.Server
+	hsrv     *l3http.Server
 	setReady func(bool)
 	eg       *errgroup.Group
 	egCtx    context.Context
@@ -46,7 +46,7 @@ func New() (*App, error) {
 		return nil, errors.Wrap(err, "when configuring caiapp")
 	}
 
-	debugListener, err := hserver.New(cfg.Server.AddrDebug+":"+strconv.Itoa(cfg.Server.PortDebug), hserver.WithName("debug"))
+	debugListener, err := l3http.New(cfg.Server.AddrDebug+":"+strconv.Itoa(cfg.Server.PortDebug), l3http.WithName("debug"))
 	if err != nil {
 		return nil, errors.Wrap(err, "when creating a debug HTTP server")
 	}
@@ -64,7 +64,7 @@ func New() (*App, error) {
 		return debugListener.Run(context.Background(), debugHandler)
 	})
 
-	mainSrv, err := hserver.New(cfg.Server.AddrHTTP+":"+strconv.Itoa(cfg.Server.PortHTTP), hserver.WithName("main"))
+	mainSrv, err := l3http.New(cfg.Server.AddrHTTP+":"+strconv.Itoa(cfg.Server.PortHTTP), l3http.WithName("main"))
 	if err != nil {
 		return nil, errors.Wrap(err, "when creating main HTTP server")
 	}

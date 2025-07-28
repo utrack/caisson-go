@@ -2,7 +2,9 @@
 // errors with arbitrary keys and values.
 //
 // Bags are used to add context to errors - as an example, you can use them to pass
-// HTTP/gRPC codes, error reasons, etc.
+// HTTP/gRPC codes, error reasons, aux error data for the frontend, etc.
+// They work as a stack of key-value pairs; like an inverted `context` value, where the stack
+// is populated from the innermost code part (the error cause) instead of the outermost one (API request).
 //
 // Bags implement the error interface and can be
 // used with the errors, github.com/pkg/errors and other packages.
@@ -18,7 +20,6 @@ import (
 type Bag[K comparable, T any] interface {
 	error
 	Key() K
-	Details() T
 	Value() T
 	Unwrap() error
 	bagAny
@@ -115,10 +116,6 @@ func (c container[K, T]) Error() string {
 
 func (c container[K, T]) Key() K {
 	return c.key
-}
-
-func (c container[K, T]) Details() T {
-	return c.value
 }
 
 func (c container[K, T]) Value() T {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/longkai/rfc7807"
 	"github.com/utrack/caisson-go/errors"
-	"github.com/utrack/caisson-go/pkg/errorbag"
+	"github.com/utrack/caisson-go/levels/level3/errorbag"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -53,7 +53,6 @@ func Marshal(rspErr error, w http.ResponseWriter, r *http.Request) {
 		slog.ErrorContext(r.Context(), "failed to marshal error", slog.String("err", err.Error()), slog.String("stack", fmt.Sprintf("%+v", err)))
 		return
 	}
-
 
 	w.Write(buf)
 }

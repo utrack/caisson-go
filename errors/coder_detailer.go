@@ -67,7 +67,7 @@ func (c coderDetailer[T]) ExtractDetail(err error) *T {
 	var d Detailed[T]
 	ok := As(err, &d)
 	if ok {
-		ret := d.Details()
+		ret := d.Value()
 		return &ret
 	}
 	return nil

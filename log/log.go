@@ -7,23 +7,28 @@ import (
 	"os"
 
 	"github.com/utrack/caisson-go/errors"
-	"github.com/utrack/caisson-go/pkg/errorbag"
+	"github.com/utrack/caisson-go/levels/level3/errorbag"
+	"github.com/utrack/caisson-go/levels/level3/logctx"
 )
 
 func SetLevel(level slog.Level) {
 	slog.SetLogLoggerLevel(level)
 }
 
+func With(ctx context.Context, kvs ...any) context.Context {
+	return logctx.With(ctx, kvs...)
+}
+
 func Debug(ctx context.Context, msg string, kvs ...any) {
-	fromCtx(ctx).DebugContext(ctx, msg, kvs...)
+	logctx.From(ctx).DebugContext(ctx, msg, kvs...)
 }
 
 func Info(ctx context.Context, msg string, kvs ...any) {
-	fromCtx(ctx).InfoContext(ctx, msg, kvs...)
+	logctx.From(ctx).InfoContext(ctx, msg, kvs...)
 }
 
 func Warn(ctx context.Context, msg string, kvs ...any) {
-	fromCtx(ctx).WarnContext(ctx, msg, kvs...)
+	logctx.From(ctx).WarnContext(ctx, msg, kvs...)
 }
 
 func Warne(ctx context.Context, msg string, err error, kvs ...any) {
@@ -56,7 +61,7 @@ func Error(ctx context.Context, msg string, err error, kvs ...any) {
 // Errorn emits a log with level Error but it does not add any error context.
 // In 99% of the cases you want to use Error or Errorne instead.
 func Errorn(ctx context.Context, msg string, kvs ...any) {
-	fromCtx(ctx).ErrorContext(ctx, msg, kvs...)
+	logctx.From(ctx).ErrorContext(ctx, msg, kvs...)
 }
 
 // Errorne is a shortcut for Error(ctx, err.Error(), err, errKvs(err, kvs)...)
@@ -68,7 +73,7 @@ func Errorne(ctx context.Context, err error, kvs ...any) {
 }
 
 func Fatal(ctx context.Context, msg string, kvs ...any) {
-	fromCtx(ctx).Log(ctx, 21, msg, kvs...)
+	logctx.From(ctx).Log(ctx, 21, msg, kvs...)
 	os.Exit(1)
 }
 

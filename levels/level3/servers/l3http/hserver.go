@@ -1,4 +1,4 @@
-package hserver
+package l3http
 
 import (
 	"context"
@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/utrack/caisson-go/errors"
-	"github.com/utrack/caisson-go/pkg/plog"
+	"github.com/pkg/errors"
+	"github.com/utrack/caisson-go/levels/level3/errorbag"
+	"github.com/utrack/caisson-go/levels/level3/logctx"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -32,7 +33,7 @@ type Server struct {
 	eg    *errgroup.Group
 	egCtx context.Context
 
-	srvStop func(context.Context) error
+	srvShutdown func(context.Context) error
 }
 
 type opts struct {
@@ -69,9 +70,13 @@ func New(addr string, optionFuncs ...Option) (*Server, error) {
 	}
 	lis, err := net.Listen("tcp", o.addr)
 	if err != nil {
-		return nil, errors.Wrapd(err, "failed to bring up the listener", "addr", o.addr, "name", o.name)
+		return nil,
+			errorbag.With(
+				errorbag.With(errors.New("failed to bring up the listener"), "addr", o.addr),
+				"name", o.name)
 	}
-	plog.Info(context.Background(), "listener port bound", "addr", o.addr, "name", o.name)
+
+	logctx.From(context.Background()).Info("listener port bound", "addr", o.addr, "name", o.name)
 
 	eg, egCtx := errgroup.WithContext(context.Background())
 
@@ -88,7 +93,7 @@ func New(addr string, optionFuncs ...Option) (*Server, error) {
 // Blocks until the server stops or the context is canceled.
 // If a context is canceled, the server will be stopped immediately.
 func (s *Server) Run(ctx context.Context, h *http.Server) error {
-	s.srvStop = h.Shutdown
+	s.srvShutdown = h.Shutdown
 
 	// start serving requests
 	s.eg.Go(func() error {
@@ -118,7 +123,7 @@ func (s *Server) Run(ctx context.Context, h *http.Server) error {
 			return nil
 		}
 
-		plog.Info(ctx, "HTTP server is ready and accepting connections", "name", s.opts.name)
+		logctx.From(ctx).Info("HTTP server is ready and accepting connections", "name", s.opts.name)
 
 		s.readyToServe.Set(true)
 
@@ -144,15 +149,17 @@ func (s *Server) Ready() bool {
 // GracefulStop stops the HTTP server gracefully.
 // Blocks until the server stops or the context is canceled.
 // If a context is canceled, the server will be stopped immediately.
+//
+// The shutdown starts immediately after the function is called.
 func (s *Server) GracefulStop(ctx context.Context) error {
 
 	s.readyToServe.Set(false)
 
 	s.eg.Go(func() error {
-		if s.srvStop == nil {
+		if s.srvShutdown == nil {
 			return nil
 		}
-		return errors.Wrap(s.srvStop(ctx), "failed to gracefully stop the server")
+		return errors.Wrap(s.srvShutdown(ctx), "failed to gracefully stop the server")
 	})
 
 	err := s.eg.Wait()

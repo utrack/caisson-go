@@ -3,7 +3,7 @@ package errors
 import (
 	"fmt"
 
-	"github.com/utrack/caisson-go/pkg/errorbag"
+	"github.com/utrack/caisson-go/levels/level3/errorbag"
 )
 
 // WithKeyedData adds a typed detail to the error.

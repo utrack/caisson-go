@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/utrack/caisson-go/errors"
-	"github.com/utrack/caisson-go/pkg/errorbag"
+	"github.com/utrack/caisson-go/levels/level3/errorbag"
 )
 
 // ExampleCoder_httpCodeSignaling shows how to use Coder to signal HTTP codes.

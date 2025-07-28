@@ -3,7 +3,7 @@ package plog
 import (
 	"log/slog"
 
-	"github.com/utrack/caisson-go/pkg/errorbag"
+	"github.com/utrack/caisson-go/levels/level3/errorbag"
 )
 
 // errorUnpacker unpacks an error into a slog.Value.

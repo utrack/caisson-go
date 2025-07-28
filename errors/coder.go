@@ -30,7 +30,7 @@ func Code(err error) Coded {
 	var ret Detailed[Coded]
 	ok := As(err, &ret)
 	if ok {
-		return ret.Details()
+		return ret.Value()
 	}
 	return nil
 }
