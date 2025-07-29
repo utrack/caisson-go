@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/utrack/caisson-go/errors"
-	"github.com/utrack/caisson-go/internal/icloser"
+	"github.com/utrack/caisson-go/levels/level3/l3closer"
 )
 
 type Closer interface {
@@ -23,11 +23,11 @@ func (f CloserFunc) Close() error {
 }
 
 func Register(c Closer) {
-	icloser.Register(closeCtxWrap{c: c})
+	l3closer.Register(closeCtxWrap{c: c})
 }
 
 func RegisterC(c CloserC) {
-	icloser.Register(c)
+	l3closer.Register(c)
 }
 
 type closeCtxWrap struct {
