@@ -114,6 +114,9 @@ func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler 
 	if funcType.NumOut() > 2 {
 		return nil, Meta{}, errors.New("handler should return maximum of 2 parameters")
 	}
+	if funcType.NumOut() > 0 && controlsResponseWriter {
+		return nil, Meta{}, errors.New("handler should not return anything if it controls the response writer directly")
+	}
 
 	retMeta := Meta{
 		NamedFunc:         h,
@@ -129,12 +132,14 @@ func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler 
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		inArgs := []reflect.Value{}
 
-		ow := &wrappedWriter{blockWrites: hasOutputStruct, w: w}
+		if !controlsResponseWriter {
+			ow := &wrappedWriter{blockWrites: hasOutputStruct, w: w}
+			w = ow
+		}
 		for _, f := range inFuncs {
-			v, err := f(ow, r)
+			v, err := f(w, r)
 			if err != nil {
 				errRender(r.Context(), r, w, err)
 				return
@@ -161,8 +166,8 @@ func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler 
 		switch {
 		case hasOutputStruct:
 			err = marshaler(r, w, out[0].Interface())
-		case ow.written:
-			// do not output anything if someting came through w
+		case !controlsResponseWriter:
+			// do not output anything if the handler controls the writer directly
 		default:
 			err = marshaler(r, w, struct{}{})
 		}
