@@ -82,6 +82,10 @@ func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler 
 			inFuncs = append(inFuncs, func(_ http.ResponseWriter, r *http.Request) (reflect.Value, error) {
 				return reflect.ValueOf(r), nil
 			})
+		case funcType.In(i) == typeCtx:
+			inFuncs = append(inFuncs, func(_ http.ResponseWriter, r *http.Request) (reflect.Value, error) {
+				return reflect.ValueOf(r.Context()), nil
+			})
 		case funcType.In(i).Implements(writerInterface):
 			controlsResponseWriter = true
 			inFuncs = append(inFuncs, func(w http.ResponseWriter, r *http.Request) (reflect.Value, error) {
@@ -134,10 +138,6 @@ func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		inArgs := []reflect.Value{}
 
-		if !controlsResponseWriter {
-			ow := &wrappedWriter{blockWrites: hasOutputStruct, w: w}
-			w = ow
-		}
 		for _, f := range inFuncs {
 			v, err := f(w, r)
 			if err != nil {
@@ -166,7 +166,7 @@ func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler 
 		switch {
 		case hasOutputStruct:
 			err = marshaler(r, w, out[0].Interface())
-		case !controlsResponseWriter:
+		case controlsResponseWriter:
 			// do not output anything if the handler controls the writer directly
 		default:
 			err = marshaler(r, w, struct{}{})
