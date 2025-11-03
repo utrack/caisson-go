@@ -9,6 +9,7 @@ import (
 	"github.com/ggicci/httpin/integration"
 	"github.com/go-chi/chi/v5"
 	"github.com/utrack/caisson-go/errors"
+	"github.com/utrack/caisson-go/pkg/http/errmarshalhttp"
 	"github.com/utrack/caisson-go/pkg/http/negmarshal"
 	"github.com/utrack/pontoon/sdesc"
 )
@@ -26,8 +27,6 @@ func init() {
 
 var ErrMalformedRequest = errors.NewCoder("BAD_REQUEST").WithHTTPCode(400).WithMessage("malformed request body")
 
-type ErrorRenderer func(context.Context, *http.Request, http.ResponseWriter, error)
-
 // wrapDescRPCHandler converts sdesc.RPCHandler to stdlib http.HandlerFunc.
 // It can wrap handlers that accept any/all of *http.Request, http.ResponseWriter
 // and any custom struct (which is then unmarshaled via ggicci/httpin).
@@ -36,8 +35,8 @@ type ErrorRenderer func(context.Context, *http.Request, http.ResponseWriter, err
 // The return type is marshaled to negotiated content type, or JSON by default.
 //
 // Writing to http.ResponseWriter is not allowed if handler has a return type.
-func BindHTTPHandler(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler negmarshal.NegotiatedMarshalFunc) (http.Handler, error) {
-	ret, _, err := BindHTTPHandlerMeta(h, errRender, marshaler)
+func BindHTTPHandler(h sdesc.RPCHandler, marshaler negmarshal.NegotiatedMarshalFunc) (http.Handler, error) {
+	ret, _, err := BindHTTPHandlerMeta(h, marshaler)
 	return ret, err
 }
 
@@ -46,10 +45,7 @@ func BindHTTPHandler(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler negm
 // It can be used to inspect the handler's input and output types for documentation autogen.
 //
 // TODO this can be split into two functions, one for meta extraction and one for binding based on the meta.
-func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler negmarshal.NegotiatedMarshalFunc) (http.Handler, Meta, error) {
-	if errRender == nil {
-		return nil, Meta{}, errors.New("nil ErrorRenderer")
-	}
+func BindHTTPHandlerMeta(h sdesc.RPCHandler, marshaler negmarshal.NegotiatedMarshalFunc) (http.Handler, Meta, error) {
 	handleFuncRef := reflect.ValueOf(h)
 	if handleFuncRef.Kind() != reflect.Func {
 		return nil, Meta{}, errors.New("handler is not a function")
@@ -141,7 +137,7 @@ func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler 
 		for _, f := range inFuncs {
 			v, err := f(w, r)
 			if err != nil {
-				errRender(r.Context(), r, w, err)
+				marshaler(r, w, nil, errmarshalhttp.ToRFC7807(r.Context(), err))
 				return
 			}
 			inArgs = append(inArgs, v)
@@ -158,22 +154,22 @@ func BindHTTPHandlerMeta(h sdesc.RPCHandler, errRender ErrorRenderer, marshaler 
 		}
 
 		if !out[errPos].IsNil() {
-			errRender(r.Context(), r, w, out[errPos].Interface().(error))
+			marshaler(r, w, nil, errmarshalhttp.ToRFC7807(r.Context(), out[errPos].Interface().(error)))
 			return
 		}
 
 		var err error
 		switch {
 		case hasOutputStruct:
-			err = marshaler(r, w, out[0].Interface())
+			err = marshaler(r, w, out[0].Interface(), nil)
 		case controlsResponseWriter:
 			// do not output anything if the handler controls the writer directly
 		default:
-			err = marshaler(r, w, struct{}{})
+			err = marshaler(r, w, struct{}{}, nil)
 		}
 		if err != nil {
 			err = errors.Wrap(err, "the call succeeded, but failed to marshal the response")
-			errRender(r.Context(), r, w, err)
+			marshaler(r, w, nil, errmarshalhttp.ToRFC7807(r.Context(), err))
 		}
 	}), retMeta, nil
 }

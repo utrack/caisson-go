@@ -10,11 +10,11 @@ import (
 )
 
 // MarshalFunc marshals the value in some single format (like json.Marshal or xml.Marshal).
-type MarshalFunc func(ctx context.Context, w io.Writer, v any) error
+type MarshalFunc func(ctx context.Context, w io.Writer, rsp any, errObj any) error
 
 // NegotiatedMarshalFunc marshals the value in the negotiated format,
 // based on the request's Accept header.
-type NegotiatedMarshalFunc func(r *http.Request, w io.Writer, v any) error
+type NegotiatedMarshalFunc func(r *http.Request, w io.Writer, rsp any, errObj any) error
 
 // Default returns a NegotiatedMarshalFunc that supports JSON and XML outputs.
 func Default() NegotiatedMarshalFunc {
@@ -45,14 +45,14 @@ func New(mm map[string]MarshalFunc, defaultMarshaler MarshalFunc) *negotiator {
 	}
 }
 
-func (n *negotiator) Marshal(r *http.Request, w io.Writer, v any) error {
+func (n *negotiator) Marshal(r *http.Request, w io.Writer, v any, errObj any) error {
 	accepts := r.Header.Get("Accept")
 	if accepts == "" || accepts == "*/*" {
 		m := n.defaultm
 		if m == nil {
 			return errors.New("no default marshaler provided")
 		}
-		return m(r.Context(), w, v)
+		return m(r.Context(), w, v, errObj)
 	}
 	mType, _, err := n.neg.Negotiate(accepts)
 	if err != nil {
@@ -62,5 +62,5 @@ func (n *negotiator) Marshal(r *http.Request, w io.Writer, v any) error {
 	if !ok {
 		panic("something's really wrong, no marshaler for known-negotiated type " + mType.String())
 	}
-	return m(r.Context(), w, v)
+	return m(r.Context(), w, v, errObj)
 }

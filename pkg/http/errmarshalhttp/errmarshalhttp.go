@@ -1,9 +1,8 @@
 package errmarshalhttp
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/longkai/rfc7807"
@@ -13,9 +12,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func Marshal(rspErr error, w http.ResponseWriter, r *http.Request) {
-
-	span := trace.SpanFromContext(r.Context())
+// TODO move context away, write span somewhere else
+func ToRFC7807(ctx context.Context, rspErr error) any {
+	span := trace.SpanFromContext(ctx)
 	if span != nil {
 		span.RecordError(rspErr)
 	}
@@ -24,11 +23,9 @@ func Marshal(rspErr error, w http.ResponseWriter, r *http.Request) {
 
 	var rsp rfc7807.ProblemDetail
 	if code == nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		rsp.Status = http.StatusInternalServerError
 		rsp.Detail = rspErr.Error()
 	} else {
-		w.WriteHeader(code.HTTPCode())
 
 		rsp.Status = code.HTTPCode()
 		rsp.Type = code.Type()
@@ -47,12 +44,5 @@ func Marshal(rspErr error, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	buf, err := json.Marshal(rsp)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		slog.ErrorContext(r.Context(), "failed to marshal error", slog.String("err", err.Error()), slog.String("stack", fmt.Sprintf("%+v", err)))
-		return
-	}
-
-	w.Write(buf)
+	return rsp
 }
