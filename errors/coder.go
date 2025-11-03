@@ -88,7 +88,10 @@ func (c coder) Wrap(cause error) error {
 }
 
 func (c coder) Error() string {
-	return fmt.Sprintf("non-wrapped %s: %s", c.data.Typ, c.data.UserMessage)
+	if c.data.Typ == "" {
+		return c.data.UserMessage
+	}
+	return fmt.Sprintf("%s: %s", c.data.Typ, c.data.UserMessage)
 }
 
 func (c coder) Is(target error) bool {
