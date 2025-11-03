@@ -2,7 +2,6 @@ package negmarshal
 
 import (
 	"context"
-	"io"
 	"net/http"
 
 	"github.com/utrack/caisson-go/errors"
@@ -10,11 +9,11 @@ import (
 )
 
 // MarshalFunc marshals the value in some single format (like json.Marshal or xml.Marshal).
-type MarshalFunc func(ctx context.Context, w io.Writer, rsp any, errObj any) error
+type MarshalFunc func(ctx context.Context, w http.ResponseWriter, rsp any, errObj any) error
 
 // NegotiatedMarshalFunc marshals the value in the negotiated format,
 // based on the request's Accept header.
-type NegotiatedMarshalFunc func(r *http.Request, w io.Writer, rsp any, errObj any) error
+type NegotiatedMarshalFunc func(r *http.Request, w http.ResponseWriter, rsp any, errObj any) error
 
 // Default returns a NegotiatedMarshalFunc that supports JSON and XML outputs.
 func Default() NegotiatedMarshalFunc {
@@ -45,7 +44,7 @@ func New(mm map[string]MarshalFunc, defaultMarshaler MarshalFunc) *negotiator {
 	}
 }
 
-func (n *negotiator) Marshal(r *http.Request, w io.Writer, v any, errObj any) error {
+func (n *negotiator) Marshal(r *http.Request, w http.ResponseWriter, v any, errObj any) error {
 	accepts := r.Header.Get("Accept")
 	if accepts == "" || accepts == "*/*" {
 		m := n.defaultm
