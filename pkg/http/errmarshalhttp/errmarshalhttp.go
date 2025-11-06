@@ -13,7 +13,10 @@ import (
 )
 
 // TODO move context away, write span somewhere else
-func ToRFC7807(ctx context.Context, rspErr error) any {
+func ToRFC7807(ctx context.Context, rspErr error) *rfc7807.ProblemDetail {
+	if rspErr == nil {
+		return nil
+	}
 	span := trace.SpanFromContext(ctx)
 	if span != nil {
 		span.RecordError(rspErr)
@@ -44,5 +47,5 @@ func ToRFC7807(ctx context.Context, rspErr error) any {
 		}
 	}
 
-	return rsp
+	return &rsp
 }
