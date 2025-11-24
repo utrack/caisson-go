@@ -17,7 +17,7 @@ import (
 
 // Bag is a key-value pair with an error
 // associated with it.
-type Bag[K comparable, T any] interface {
+type Bag[K comparable, T comparable] interface {
 	error
 	Key() K
 	Value() T
@@ -36,7 +36,7 @@ type bagAny interface {
 // Nil cause returns a nil Bag.
 //
 // The 'context' key rules apply; it's better to create your own key type and use it instead of a string to protect against collisions.
-func With[K comparable, T any](cause error, key K, value T) Bag[K, T] {
+func With[K comparable, T comparable](cause error, key K, value T) Bag[K, T] {
 	if cause == nil {
 		return nil
 	}
@@ -50,7 +50,7 @@ func With[K comparable, T any](cause error, key K, value T) Bag[K, T] {
 // Get returns the value associated with the given key; recursing into the error chain to find it.
 //
 // It follows the errors.Unwrap() semantics; key-value pairs behind the errors.Join are unsupported.
-func Get[K comparable, T any](err error, key K) (T, bool) {
+func Get[K comparable, T comparable](err error, key K) (T, bool) {
 	for err != nil {
 		if bag, ok := err.(Bag[K, T]); ok {
 			if bag.Key() == key {
@@ -65,7 +65,7 @@ func Get[K comparable, T any](err error, key K) (T, bool) {
 // GetAll returns all the values associated with the given key; recursing into the error chain to find them.
 //
 // It follows the errors.Unwrap() semantics; key-value pairs behind the errors.Join are unsupported.
-func GetAll[K comparable, T any](err error, key K) ([]T, bool) {
+func GetAll[K comparable, T comparable](err error, key K) ([]T, bool) {
 	var ret []T
 	for err != nil {
 		if bag, ok := err.(Bag[K, T]); ok {
@@ -103,7 +103,7 @@ func ListPairs(err error) map[string]any {
 	return ret
 }
 
-type container[K comparable, T any] struct {
+type container[K comparable, T comparable] struct {
 	cause error
 
 	key   K
@@ -132,4 +132,19 @@ func (c container[K, T]) keyAny() any {
 
 func (c container[K, T]) valueAny() any {
 	return c.value
+}
+
+func (c container[K, T]) Is(target error) bool {
+	if v, ok := target.(Bag[K, T]); ok {
+		return v.Key() == c.key
+	}
+	if src, ok := target.(errorBagSource[K, T]); ok {
+		k, v := src.AsErrorBag()
+		return k == c.key && v == c.value
+	}
+	return false
+}
+
+type errorBagSource[K comparable, T comparable] interface {
+	AsErrorBag() (K, T)
 }

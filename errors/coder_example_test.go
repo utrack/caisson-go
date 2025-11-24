@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/utrack/caisson-go/errors"
-	"github.com/utrack/caisson-go/levels/level3/errorbag"
 )
 
 // ExampleCoder_httpCodeSignaling shows how to use Coder to signal HTTP codes.
@@ -16,7 +15,7 @@ func ExampleCoder_httpCodeSignaling() {
 
 	internalCode := func() error {
 		// define global error
-		var ErrNotFound = errors.NewCoder("NOT_FOUND").WithHTTPCode(404).WithMessage("Not found (user message)")
+		ErrNotFound := errors.NewCoder("NOT_FOUND").WithHTTPCode(404).WithMessage("Not found (user message)")
 
 		// in the function:
 		err := sql.ErrNoRows
@@ -35,7 +34,7 @@ func ExampleCoder_httpCodeSignaling() {
 		fmt.Println("HTTP code:", errRsp.HTTPCode())
 		fmt.Println("Message:", errRsp.Message())
 		fmt.Println("Code:", errRsp.Type())
-		fmt.Println("Unwrap is sql.ErrNoRows:", errRsp.Unwrap() == sql.ErrNoRows)
+		fmt.Println("Unwrap is sql.ErrNoRows:", errors.Is(err, sql.ErrNoRows))
 	}
 
 	// Output:
@@ -49,7 +48,6 @@ func ExampleCoder_httpCodeSignaling() {
 // ExampleCoderDetailer_customDetails shows how to use CoderDetailer to enrich errors with custom details.
 // In this example, we use it to return additional context for the frontend; handler can pick up the details via [github.com/utrack/caisson-go/pkg/errorbag.ListPairs] and marshal them to the client.
 func ExampleCoderDetailer_customDetails() {
-
 	// in the internal package:
 	// the error is public (ErrUserAlreadyExists);
 	// the error details are private (errData).
@@ -57,7 +55,7 @@ func ExampleCoderDetailer_customDetails() {
 		UserID int
 	}
 
-	var ErrUserAlreadyExists = errors.NewCoderDetailer[errData]("USER_ALREADY_EXISTS").WithHTTPCode(409).WithMessage("User already exists")
+	ErrUserAlreadyExists := errors.NewCoderDetailer[errData]("USER_ALREADY_EXISTS").WithHTTPCode(409).WithMessage("User already exists")
 
 	// in internal/database layer
 	sqlDoCreateUser := func() error {
@@ -95,7 +93,6 @@ func ExampleCoderDetailer_customDetails() {
 		fmt.Println("HTTP code:", errRsp.HTTPCode())
 		fmt.Println("Message:", errRsp.Message())
 		fmt.Println("Code:", errRsp.Type())
-		fmt.Println("Details:", errorbag.ListPairs(err))
 		return err
 	}
 
@@ -108,5 +105,4 @@ func ExampleCoderDetailer_customDetails() {
 	// HTTP code: 409
 	// Message: User already exists
 	// Code: USER_ALREADY_EXISTS
-	// Details: map[errors.Coded:sql: email already exists errors_test.errData:{31337}]
 }

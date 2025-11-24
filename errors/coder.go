@@ -3,6 +3,7 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"reflect"
 )
 
 // Coder is a static struct which enriches passing errors with HTTP codes and user messages.
@@ -20,7 +21,6 @@ type Coded interface {
 	HTTPCode() int
 	Message() string
 	Type() string
-	Unwrap() error
 }
 
 func Code(err error) Coded {
@@ -83,7 +83,6 @@ func (c coder) WithHTTPCode(httpCode int) Coder {
 
 func (c coder) Wrap(cause error) error {
 	d := c.data
-	d.cause = cause
 	return DetailWith[Coded](cause, d)
 }
 
@@ -97,14 +96,19 @@ func (c coder) Error() string {
 func (c coder) Is(target error) bool {
 	var t coder
 	// TODO test-cover
-	return errors.As(target, &t) && t.data.Typ == c.data.Typ && t.data.HttpCode == c.data.HttpCode && t.data.UserMessage == c.data.UserMessage
+	return errors.As(target, &t) && t.data == c.data
+}
+
+var coderType = reflect.TypeFor[Coded]()
+
+func (c coder) AsErrorBag() (reflect.Type, Coded) {
+	return coderType, c.data
 }
 
 type coded struct {
 	HttpCode    int    `json:"http_code"`
 	Typ         string `json:"type"`
 	UserMessage string `json:"user_message"`
-	cause       error
 }
 
 var _ Coded = coded{}
@@ -117,25 +121,11 @@ func (c coded) HTTPCode() int {
 }
 
 func (c coded) Message() string {
-	inner := Code(c.cause)
-
-	if inner != nil && inner.Message() != "" {
-		return c.UserMessage + ": " + inner.Message()
-	}
-
 	return c.UserMessage
 }
 
 func (c coded) Type() string {
 	return c.Typ
-}
-
-func (c coded) Unwrap() error {
-	return c.cause
-}
-
-func (c coded) Error() string {
-	return c.cause.Error()
 }
 
 func (c coded) Is(target error) bool {

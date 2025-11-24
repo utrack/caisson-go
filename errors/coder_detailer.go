@@ -3,7 +3,7 @@ package errors
 // CoderDetailer is a Coder that enriches errors with typed details.
 //
 // See Coder for the general description.
-type CoderDetailer[T any] interface {
+type CoderDetailer[T comparable] interface {
 	WithType(typ string) CoderDetailer[T]
 	WithMessage(userMessage string) CoderDetailer[T]
 	WithMessagef(format string, args ...any) CoderDetailer[T]
@@ -20,11 +20,11 @@ type CoderDetailer[T any] interface {
 // Use it to emit Coded errors which provide additional context structs to the error.
 //
 // As an example, you can return protocol errors (a-la pq.Error), or additional error context for your frontend.
-func NewCoderDetailer[T any](typ string) CoderDetailer[T] {
+func NewCoderDetailer[T comparable](typ string) CoderDetailer[T] {
 	return coderDetailer[T]{coder: NewCoder(typ)}
 }
 
-type coderDetailer[T any] struct {
+type coderDetailer[T comparable] struct {
 	coder Coder
 }
 

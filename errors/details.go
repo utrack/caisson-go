@@ -15,7 +15,7 @@ import (
 //	if ok {
 //	    details := d.Value()
 //	}
-func DetailWith[T any](err error, value T) error {
+func DetailWith[T comparable](err error, value T) error {
 	if err == nil {
 		return nil
 	}
@@ -24,7 +24,7 @@ func DetailWith[T any](err error, value T) error {
 }
 
 // Detailed is an interface for errors enriched with typed details.
-type Detailed[T any] interface {
+type Detailed[T comparable] interface {
 	error
 	Value() T
 }

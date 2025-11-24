@@ -16,14 +16,14 @@ import (
 //
 // When used in conjunction with errors.As(),
 // errors.As(err, &T{}) will return the first value of the type.
-func WithKeyedData[K comparable, T any](err error, key K, value T) error {
+func WithKeyedData[K comparable, T comparable](err error, key K, value T) error {
 	return errorbag.With(err, key, value)
 }
 
 // KeyedData retrieves the value associated with the given key.
 //
 // Returns (zero value, false) if the key is not found.
-func KeyedData[K comparable, T any](err error, key K) (T, bool) {
+func KeyedData[K comparable, T comparable](err error, key K) (T, bool) {
 	return errorbag.Get[K, T](err, key)
 }
 
