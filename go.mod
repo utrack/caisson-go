@@ -14,6 +14,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.22.0
 	github.com/riandyrn/otelchi v0.12.1
+	github.com/stretchr/testify v1.10.0
 	github.com/utrack/envconfig v1.0.1
 	github.com/utrack/pontoon v0.4.1
 	github.com/utrack/pontoon/v2 v2.0.0-b3

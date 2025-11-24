@@ -23,3 +23,12 @@ func TestCoderIs(t *testing.T) {
 	so.True(Is(wr, code))
 	so.False(Is(wr, code2))
 }
+
+func TestCoderIs__wrapInMiddle(t *testing.T) {
+	so := require.New(t)
+
+	code := NewCoder("test").WithHTTPCode(401).WithMessage("raw coder")
+
+	err := Wrap(code, "some middle error")
+	so.True(errors.Is(err, code))
+}
